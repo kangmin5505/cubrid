@@ -3084,6 +3084,19 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
       save = node->info.insert.odku_assignments;
       node->info.insert.odku_assignments = NULL;
 
+      /* TODO: refactor to a function */
+      node1 = node->info.insert.value_clauses->info.node_list.list;
+      while (node1)
+        {
+          if (node1->node_type == PT_NAME)
+            {
+              /* TODO: add a message */
+	      PT_ERRORc (parser, node1, er_msg ());
+              goto insert_end;
+            }
+          node1 = node1->next;
+        }
+
       if (node->info.insert.spec->info.spec.remote_server_name == NULL)
 	{
 	  parser_walk_leaves (parser, node, pt_bind_names, bind_arg, pt_bind_names_post, bind_arg);
