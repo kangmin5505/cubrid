@@ -3097,7 +3097,7 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
 	    {
 	      /* TODO: add a message */
 	      //       er_set (ER_WARNING_SEVERITY, ARG_FILE_LINE, ER_OBJ_INVALID_ATTRIBUTE, 1, name);
-	      //       PT_ERRORc (parser, node1, er_msg ());
+	      PT_ERRORc (parser, node1, er_msg ());
 	      //       PT_ERRORmf (parser, node, MSGCAT_SET_PARSER_SEMANTIC, MSGCAT_SEMANTIC_METH_DOESNT_EXIST,
 	      //                node->info.method_call.method_name->info.name.original);
 	      goto insert_end;
