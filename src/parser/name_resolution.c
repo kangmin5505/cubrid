@@ -256,6 +256,9 @@ static int pt_resolve_dblink_server_name (PARSER_CONTEXT * parser, PT_NODE * nod
 static int pt_resolve_dblink_check_owner_name (PARSER_CONTEXT * parser, PT_NODE * node, char **server_owner_name);
 
 static void pt_gather_dblink_colums (PARSER_CONTEXT * parser, PT_NODE * query_stmt);
+static int check_insert_value_nodes_in_trigger (PT_NODE * node);
+static int check_insert_value_nodes (PT_NODE * node);
+static int check_trigger_correlation_names (const char *name);
 typedef struct
 {
   int norder;
@@ -1980,6 +1983,8 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
   short i, k, lhs_location, rhs_location, level;
   PT_JOIN_TYPE join_type;
   void *save_etc = NULL;
+  bool is_trigger = false;
+  PT_NODE *list = NULL;
 
   *continue_walk = PT_CONTINUE_WALK;
 
@@ -3053,6 +3058,9 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
       break;
 
     case PT_INSERT:
+      is_trigger = parser->node_stack[0]->node_type == PT_SCOPE &&
+	parser->node_stack[0]->info.scope.stmt->node_type == PT_TRIGGER_ACTION;
+      list = node->info.insert.value_clauses->info.node_list.list;
       scopestack.specs = node->info.insert.spec;
       bind_arg->scopes = &scopestack;
       spec_frame.next = bind_arg->spec_frames;
@@ -3084,25 +3092,21 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
       save = node->info.insert.odku_assignments;
       node->info.insert.odku_assignments = NULL;
 
+      if (is_trigger && check_insert_value_nodes_in_trigger (list) != NO_ERROR)
+	{
+	  PT_ERRORc (parser, node1, er_msg ());
+	  goto insert_end;
+	}
+
       if (node->info.insert.spec->info.spec.remote_server_name == NULL)
 	{
 	  parser_walk_leaves (parser, node, pt_bind_names, bind_arg, pt_bind_names_post, bind_arg);
 	}
 
-      /* TODO: refactor to a function */
-      node1 = node->info.insert.value_clauses->info.node_list.list;
-      while (node1)
+      if (check_insert_value_nodes (list) != NO_ERROR)
 	{
-	  if (node1->node_type == PT_NAME && node1->info.name.meta_class == PT_NORMAL && !node1->data_type)
-	    {
-	      /* TODO: add a message */
-	      //       er_set (ER_WARNING_SEVERITY, ARG_FILE_LINE, ER_OBJ_INVALID_ATTRIBUTE, 1, name);
-	      PT_ERRORc (parser, node1, er_msg ());
-	      //       PT_ERRORmf (parser, node, MSGCAT_SET_PARSER_SEMANTIC, MSGCAT_SEMANTIC_METH_DOESNT_EXIST,
-	      //                node->info.method_call.method_name->info.name.original);
-	      goto insert_end;
-	    }
-	  node1 = node1->next;
+	  PT_ERRORc (parser, node1, er_msg ());
+	  goto insert_end;
 	}
 
       /* Check for double assignments */
@@ -11862,6 +11866,47 @@ pt_gather_dblink_colums (PARSER_CONTEXT * parser, PT_NODE * query_stmt)
 	}
     }
 }
+
+static int
+check_insert_value_nodes_in_trigger (PT_NODE * list)
+{
+  while (list)
+    {
+      if (list->node_type == PT_DOT_ &&
+	  check_trigger_correlation_names (list->info.dot.arg1->info.name.original) != NO_ERROR)
+	{
+	  return ER_FAILED;
+	}
+      list = list->next;
+    }
+  return NO_ERROR;
+}
+
+static int
+check_insert_value_nodes (PT_NODE * list)
+{
+  while (list)
+    {
+      if (list->node_type == PT_NAME && list->info.name.meta_class == PT_NORMAL)
+	{
+	  return ER_FAILED;
+	}
+      else if (list->node_type == PT_EXPR)
+	{
+	  return (check_insert_value_nodes (list->info.expr.arg1) == NO_ERROR &&
+		  check_insert_value_nodes (list->info.expr.arg2) == NO_ERROR) ? NO_ERROR : ER_FAILED;
+	}
+      list = list->next;
+    }
+  return NO_ERROR;
+}
+
+static int
+check_trigger_correlation_names (const char *name)
+{
+  return strcmp (name, "new") == 0 || strcmp (name, "old") == 0 || strcmp (name, "obj") == 0 ? NO_ERROR : ER_FAILED;
+}
+
 
 PT_NODE *
 pt_check_dblink_query (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue_walk)
