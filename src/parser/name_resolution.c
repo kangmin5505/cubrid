@@ -3092,17 +3092,19 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
       save = node->info.insert.odku_assignments;
       node->info.insert.odku_assignments = NULL;
 
-      if (is_trigger && check_insert_value_nodes_in_trigger (list) != NO_ERROR)
-	{
-	  PT_ERRORc (parser, node1, er_msg ());
-	  goto insert_end;
-	}
+//       if (is_trigger && check_insert_value_nodes_in_trigger (list) != NO_ERROR)
+//      {
+//        PT_ERRORc (parser, node1, er_msg ());
+//        goto insert_end;
+//      }
 
       if (node->info.insert.spec->info.spec.remote_server_name == NULL)
 	{
 	  parser_walk_leaves (parser, node, pt_bind_names, bind_arg, pt_bind_names_post, bind_arg);
 	}
 
+
+//       list = node->info.insert.value_clauses->info.node_list.list;
       if (check_insert_value_nodes (list) != NO_ERROR)
 	{
 	  PT_ERRORc (parser, node1, er_msg ());
@@ -11885,20 +11887,25 @@ check_insert_value_nodes_in_trigger (PT_NODE * list)
 static int
 check_insert_value_nodes (PT_NODE * list)
 {
-  while (list)
+  int res = NO_ERROR;
+
+  while (list && res == NO_ERROR)
+//   while (list)
     {
       if (list->node_type == PT_NAME && list->info.name.meta_class == PT_NORMAL)
 	{
-	  return ER_FAILED;
+	  //   printf("flag: %d\n", list->info.name.flag);
+	  int flag = list->info.name.flag;
+	  res = ((flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
 	}
       else if (list->node_type == PT_EXPR)
 	{
-	  return (check_insert_value_nodes (list->info.expr.arg1) == NO_ERROR &&
-		  check_insert_value_nodes (list->info.expr.arg2) == NO_ERROR) ? NO_ERROR : ER_FAILED;
+	  res = check_insert_value_nodes (list->info.expr.arg1) == NO_ERROR &&
+	    check_insert_value_nodes (list->info.expr.arg2) == NO_ERROR ? NO_ERROR : ER_FAILED;
 	}
       list = list->next;
     }
-  return NO_ERROR;
+  return res;
 }
 
 static int
