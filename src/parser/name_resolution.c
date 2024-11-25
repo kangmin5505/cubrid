@@ -3060,7 +3060,6 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
     case PT_INSERT:
       is_trigger = parser->node_stack[0]->node_type == PT_SCOPE &&
 	parser->node_stack[0]->info.scope.stmt->node_type == PT_TRIGGER_ACTION;
-      list = node->info.insert.value_clauses->info.node_list.list;
       scopestack.specs = node->info.insert.spec;
       bind_arg->scopes = &scopestack;
       spec_frame.next = bind_arg->spec_frames;
@@ -3104,8 +3103,7 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
 	}
 
 
-//       list = node->info.insert.value_clauses->info.node_list.list;
-      if (check_insert_value_nodes (list) != NO_ERROR)
+      if (check_insert_value_nodes (node->info.insert.value_clauses->info.node_list.list) != NO_ERROR)
 	{
 	  PT_ERRORc (parser, node1, er_msg ());
 	  goto insert_end;
@@ -11890,13 +11888,19 @@ check_insert_value_nodes (PT_NODE * list)
   int res = NO_ERROR;
 
   while (list && res == NO_ERROR)
-//   while (list)
     {
       if (list->node_type == PT_NAME && list->info.name.meta_class == PT_NORMAL)
 	{
-	  //   printf("flag: %d\n", list->info.name.flag);
-	  int flag = list->info.name.flag;
-	  res = ((flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
+	  if (list->info.name.flag & PT_NAME_INFO_DOT_NAME)
+	    {
+	      res = check_trigger_correlation_names (list->info.name.resolved);
+	    }
+	  else
+	    {
+	      int flag = list->info.name.flag;
+	      res = ((flag & PT_NAME_DEFAULTF_ACCEPTS)
+		     && (!(flag & (PT_NAME_INFO_FILL_DEFAULT)))) ? ER_FAILED : NO_ERROR;
+	    }
 	}
       else if (list->node_type == PT_EXPR)
 	{
