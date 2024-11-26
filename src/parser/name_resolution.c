@@ -256,9 +256,10 @@ static int pt_resolve_dblink_server_name (PARSER_CONTEXT * parser, PT_NODE * nod
 static int pt_resolve_dblink_check_owner_name (PARSER_CONTEXT * parser, PT_NODE * node, char **server_owner_name);
 
 static void pt_gather_dblink_colums (PARSER_CONTEXT * parser, PT_NODE * query_stmt);
-static int check_insert_value_nodes_in_trigger (PT_NODE * node);
-static int check_insert_value_nodes (PT_NODE * node);
+static int check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * node);
+static int handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node);
 static int check_trigger_correlation_names (const char *name);
+static int handle_expr_node (PARSER_CONTEXT * parser, PT_NODE * node);
 typedef struct
 {
   int norder;
@@ -1983,8 +1984,6 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
   short i, k, lhs_location, rhs_location, level;
   PT_JOIN_TYPE join_type;
   void *save_etc = NULL;
-  bool is_trigger = false;
-  PT_NODE *list = NULL;
 
   *continue_walk = PT_CONTINUE_WALK;
 
@@ -3058,8 +3057,6 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
       break;
 
     case PT_INSERT:
-      is_trigger = parser->node_stack[0]->node_type == PT_SCOPE &&
-	parser->node_stack[0]->info.scope.stmt->node_type == PT_TRIGGER_ACTION;
       scopestack.specs = node->info.insert.spec;
       bind_arg->scopes = &scopestack;
       spec_frame.next = bind_arg->spec_frames;
@@ -3091,21 +3088,14 @@ pt_bind_names (PARSER_CONTEXT * parser, PT_NODE * node, void *arg, int *continue
       save = node->info.insert.odku_assignments;
       node->info.insert.odku_assignments = NULL;
 
-//       if (is_trigger && check_insert_value_nodes_in_trigger (list) != NO_ERROR)
-//      {
-//        PT_ERRORc (parser, node1, er_msg ());
-//        goto insert_end;
-//      }
-
       if (node->info.insert.spec->info.spec.remote_server_name == NULL)
 	{
 	  parser_walk_leaves (parser, node, pt_bind_names, bind_arg, pt_bind_names_post, bind_arg);
 	}
 
-
-      if (check_insert_value_nodes (node->info.insert.value_clauses->info.node_list.list) != NO_ERROR)
+      if (pt_has_error (parser) ||
+	  check_insert_value_nodes (parser, node->info.insert.value_clauses->info.node_list.list) != NO_ERROR)
 	{
-	  PT_ERRORc (parser, node1, er_msg ());
 	  goto insert_end;
 	}
 
@@ -11868,47 +11858,49 @@ pt_gather_dblink_colums (PARSER_CONTEXT * parser, PT_NODE * query_stmt)
 }
 
 static int
-check_insert_value_nodes_in_trigger (PT_NODE * list)
-{
-  while (list)
-    {
-      if (list->node_type == PT_DOT_ &&
-	  check_trigger_correlation_names (list->info.dot.arg1->info.name.original) != NO_ERROR)
-	{
-	  return ER_FAILED;
-	}
-      list = list->next;
-    }
-  return NO_ERROR;
-}
-
-static int
-check_insert_value_nodes (PT_NODE * list)
+check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * list)
 {
   int res = NO_ERROR;
 
   while (list && res == NO_ERROR)
     {
-      if (list->node_type == PT_NAME && list->info.name.meta_class == PT_NORMAL)
+      switch (list->node_type)
 	{
-	  if (list->info.name.flag & PT_NAME_INFO_DOT_NAME)
-	    {
-	      res = check_trigger_correlation_names (list->info.name.resolved);
-	    }
-	  else
-	    {
-	      int flag = list->info.name.flag;
-	      res = ((flag & PT_NAME_DEFAULTF_ACCEPTS)
-		     && (!(flag & (PT_NAME_INFO_FILL_DEFAULT)))) ? ER_FAILED : NO_ERROR;
-	    }
-	}
-      else if (list->node_type == PT_EXPR)
-	{
-	  res = check_insert_value_nodes (list->info.expr.arg1) == NO_ERROR &&
-	    check_insert_value_nodes (list->info.expr.arg2) == NO_ERROR ? NO_ERROR : ER_FAILED;
+	case PT_NAME:
+	  res = handle_name_node (parser, list);
+	  break;
+	case PT_EXPR:
+	  res = handle_expr_node (parser, list);
+	  break;
+	default:
+	  break;
 	}
       list = list->next;
     }
+
+  return res;
+}
+
+static int
+handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
+{
+  int res = NO_ERROR;
+  short flag = node->info.name.flag;
+
+  if (flag & PT_NAME_INFO_DOT_NAME)
+    {
+      res = check_trigger_correlation_names (node->info.name.resolved);
+    }
+  else
+    {
+      res = ((flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
+    }
+
+  if (res == ER_FAILED)
+    {
+      PT_ERRORm (parser, node, 0, 0);
+    }
+
   return res;
 }
 
@@ -11916,6 +11908,15 @@ static int
 check_trigger_correlation_names (const char *name)
 {
   return strcmp (name, "new") == 0 || strcmp (name, "old") == 0 || strcmp (name, "obj") == 0 ? NO_ERROR : ER_FAILED;
+}
+
+static int
+handle_expr_node (PARSER_CONTEXT * parser, PT_NODE * node)
+{
+  int check_arg1 = check_insert_value_nodes (parser, node->info.expr.arg1);
+  int check_arg2 = check_insert_value_nodes (parser, node->info.expr.arg2);
+
+  return (check_arg1 == NO_ERROR && check_arg2 == NO_ERROR) ? NO_ERROR : ER_FAILED;
 }
 
 
