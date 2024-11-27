@@ -11860,17 +11860,17 @@ pt_gather_dblink_colums (PARSER_CONTEXT * parser, PT_NODE * query_stmt)
 static int
 check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * list)
 {
-  int res = NO_ERROR;
+  int error = NO_ERROR;
 
-  while (list && res == NO_ERROR)
+  while (list && error == NO_ERROR)
     {
       switch (list->node_type)
 	{
 	case PT_NAME:
-	  res = handle_name_node (parser, list);
+	  error = handle_name_node (parser, list);
 	  break;
 	case PT_EXPR:
-	  res = handle_expr_node (parser, list);
+	  error = handle_expr_node (parser, list);
 	  break;
 	default:
 	  break;
@@ -11878,30 +11878,30 @@ check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * list)
       list = list->next;
     }
 
-  return res;
+  return error;
 }
 
 static int
 handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
 {
-  int res = NO_ERROR;
+  int error = NO_ERROR;
   short flag = node->info.name.flag;
 
   if (flag & PT_NAME_INFO_DOT_NAME)
     {
-      res = check_trigger_correlation_names (node->info.name.resolved);
+      error = check_trigger_correlation_names (node->info.name.resolved);
     }
   else
     {
-      res = ((flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
+      error = ((flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
     }
 
-  if (res == ER_FAILED)
+  if (error == ER_FAILED)
     {
       PT_ERRORm (parser, node, 0, 0);
     }
 
-  return res;
+  return error;
 }
 
 static int
