@@ -11898,7 +11898,7 @@ handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
 
   if (error == ER_FAILED)
     {
-      PT_ERRORm (parser, node, 0, 0);
+      PT_ERRORm (parser, node, MSGCAT_SET_PARSER_SEMANTIC, MSGCAT_SEMANTIC_COLUMN_NOT_ALLOWED);
     }
 
   return error;
