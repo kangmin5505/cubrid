@@ -11893,7 +11893,8 @@ handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
     }
   else
     {
-      error = ((flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
+      error = ((node->info.name.meta_class != PT_META_CLASS) && (flag & PT_NAME_DEFAULTF_ACCEPTS)
+	       && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
     }
 
   if (error == ER_FAILED)
