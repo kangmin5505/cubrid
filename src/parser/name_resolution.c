@@ -11861,19 +11861,19 @@ static int
 check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * list)
 {
   int error = NO_ERROR;
+  PT_NODE_TYPE node_type = PT_NODE_NONE;
 
   while (list && error == NO_ERROR)
     {
-      switch (list->node_type)
+      node_type = list->node_type;
+
+      if (node_type == PT_NAME && list->info.name.meta_class == PT_NORMAL)
 	{
-	case PT_NAME:
 	  error = handle_name_node (parser, list);
-	  break;
-	case PT_EXPR:
+	}
+      else if (node_type == PT_EXPR)
+	{
 	  error = handle_expr_node (parser, list);
-	  break;
-	default:
-	  break;
 	}
       list = list->next;
     }
@@ -11893,8 +11893,7 @@ handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
     }
   else
     {
-      error = ((node->info.name.meta_class != PT_META_CLASS) && (flag & PT_NAME_DEFAULTF_ACCEPTS)
-	       && (!(flag & PT_NAME_INFO_FILL_DEFAULT))) ? ER_FAILED : NO_ERROR;
+      error = (flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT)) ? ER_FAILED : NO_ERROR;
     }
 
   if (error == ER_FAILED)
