@@ -6015,6 +6015,7 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
   TR_STATE *state_p;
   int status;
   bool rejected;
+  int tr_curr_step = 0;
 
   /*
    * If trigger firing has been disabled, do nothing.
@@ -6048,6 +6049,15 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 	      else
 		{
 		  state_p = NULL;
+		  ++tr_curr_step;
+		  if (compare_recursion_levels (tr_curr_step, tr_Maximum_depth) > 0)
+		    {
+		      er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_TR_EXCEEDS_MAX_REC_LEVEL, 2, tr_Maximum_depth,
+			      t->trigger->name);
+		      ASSERT_ERROR_AND_SET (error);
+		      break;
+		    }
+
 		  if (start_state (&state_p, t->trigger->name) == NULL)
 		    {
 		      ASSERT_ERROR_AND_SET (error);
@@ -6056,11 +6066,7 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 
 		  status = execute_activity (trigger, TR_TIME_DEFERRED, t->target, NULL, &rejected);
 
-		  //   tr_finish (state_p);
-		  if (state_p)
-		    {
-		      free_state (state_p);
-		    }
+		  tr_finish (state_p);
 
 		  /* execute_activity() maybe include trigger and change the next pointer. we need get it again. */
 		  next = t->next;
