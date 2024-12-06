@@ -6012,10 +6012,9 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
   TR_DEFERRED_CONTEXT *c, *c_next;
   TR_TRIGLIST *t, *next;
   TR_TRIGGER *trigger;
-  TR_STATE *state_p;
   int status;
   bool rejected;
-  int tr_curr_step = 0;
+  int tr_curr_step;
 
   /*
    * If trigger firing has been disabled, do nothing.
@@ -6026,9 +6025,11 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
       return NO_ERROR;
     }
 
+  tr_Current_depth++;
   for (c = tr_Deferred_activities, c_next = NULL; c != NULL && !error; c = c_next)
     {
       c_next = c->next;
+      tr_curr_step = 0;
 
       for (t = c->head, next = NULL; t != NULL && !error; t = next)
 	{
@@ -6048,7 +6049,6 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 		}
 	      else
 		{
-		  state_p = NULL;
 		  ++tr_curr_step;
 		  if (compare_recursion_levels (tr_curr_step, tr_Maximum_depth) > 0)
 		    {
@@ -6058,15 +6058,7 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 		      break;
 		    }
 
-		  if (start_state (&state_p, t->trigger->name) == NULL)
-		    {
-		      ASSERT_ERROR_AND_SET (error);
-		      break;
-		    }
-
 		  status = execute_activity (trigger, TR_TIME_DEFERRED, t->target, NULL, &rejected);
-
-		  tr_finish (state_p);
 
 		  /* execute_activity() maybe include trigger and change the next pointer. we need get it again. */
 		  next = t->next;
@@ -6098,6 +6090,7 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 	  remove_deferred_context (c);
 	}
     }
+  tr_Current_depth--;
 
   return error;
 }
