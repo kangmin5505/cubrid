@@ -6025,6 +6025,10 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
       return NO_ERROR;
     }
 
+  /* 
+   * Deferred activities start at a depth of +1, but tr_curr_step increases instead of tr_Current_depth. 
+   * This is because the deferred trigger is a linked structure, not a loop structure.
+   */
   tr_Current_depth++;
   for (c = tr_Deferred_activities, c_next = NULL; c != NULL && !error; c = c_next)
     {
