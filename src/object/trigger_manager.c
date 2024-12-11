@@ -6010,11 +6010,10 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 {
   int error = NO_ERROR;
   TR_DEFERRED_CONTEXT *c, *c_next;
-  TR_TRIGLIST *t, *next;
+  TR_TRIGLIST *t, *next, *tail;
   TR_TRIGGER *trigger;
   int status;
   bool rejected;
-  int tr_curr_step;
 
   /*
    * If trigger firing has been disabled, do nothing.
@@ -6026,64 +6025,76 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
     }
 
   /* 
-   * Deferred activities start at a depth of +1, but tr_curr_step increases instead of tr_Current_depth. 
-   * This is because the deferred trigger is a linked structure, not a loop structure.
+   * Before and after triggers resemble a DFS (Depth-First Search) structure,
+   * as they execute immediately and deeply within the transaction, processing related operations
+   * in a depth-first manner.
+   *
+   * In contrast, a deferred trigger resembles a BFS (Breadth-First Search) structure,
+   * as it delays execution until the end of the transaction, processing all triggers layer by layer.
    */
-  tr_Current_depth++;
+
   for (c = tr_Deferred_activities, c_next = NULL; c != NULL && !error; c = c_next)
     {
       c_next = c->next;
-      tr_curr_step = 0;
+      tr_Current_depth = 1;
 
-      for (t = c->head, next = NULL; t != NULL && !error; t = next)
+      while ((t = c->head) && !error)
 	{
-	  next = t->next;
-	  trigger = t->trigger;
+	  tr_Current_depth++;
 
-	  if ((trigger_object == NULL || trigger->object == trigger_object) && (target == NULL || t->target == target))
+	  if (compare_recursion_levels (tr_Current_depth, tr_Maximum_depth) > 0)
 	    {
-	      if (its_deleted (t->target))
+	      er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_TR_EXCEEDS_MAX_REC_LEVEL, 2, tr_Maximum_depth,
+		      t->trigger->name);
+	      ASSERT_ERROR_AND_SET (error);
+	      break;
+	    }
+
+	  tail = c->tail;	/* range [head, tail] */
+
+	  do
+	    {
+	      next = t->next;
+	      trigger = t->trigger;
+
+	      if ((trigger_object == NULL || trigger->object == trigger_object)
+		  && (target == NULL || t->target == target))
 		{
-		  /*
-		   * Somewhere along the line, the target object was deleted, quietly ignore the deferred activity.
-		   * If it turns out that we really want to keep these active, we'll have to contend with
-		   * what pt_exec_trigger_stmt is going to do when we pass it deleted objects.
-		   */
-		  remove_deferred_activity (c, t);
-		}
-	      else
-		{
-		  ++tr_curr_step;
-		  if (compare_recursion_levels (tr_curr_step, tr_Maximum_depth) > 0)
-		    {
-		      er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_TR_EXCEEDS_MAX_REC_LEVEL, 2, tr_Maximum_depth,
-			      t->trigger->name);
-		      ASSERT_ERROR_AND_SET (error);
-		      break;
-		    }
-
-		  status = execute_activity (trigger, TR_TIME_DEFERRED, t->target, NULL, &rejected);
-
-		  /* execute_activity() maybe include trigger and change the next pointer. we need get it again. */
-		  next = t->next;
-		  if (status == TR_RETURN_TRUE)
-		    {
-		      /* successful processing, remove it from the list */
-		      remove_deferred_activity (c, t);
-
-		      /* reject can't happen here, even if it does, it is unclear what it would mean */
-		    }
-		  else if (status == TR_RETURN_ERROR)
+		  if (its_deleted (t->target))
 		    {
 		      /*
-		       * if an error happens, should we invalidate the transaction ?
+		       * Somewhere along the line, the target object was deleted, quietly ignore the deferred activity.
+		       * If it turns out that we really want to keep these active, we'll have to contend with
+		       * what pt_exec_trigger_stmt is going to do when we pass it deleted objects.
 		       */
-		      ASSERT_ERROR_AND_SET (error);
+		      remove_deferred_activity (c, t);
 		    }
+		  else
+		    {
+		      status = execute_activity (trigger, TR_TIME_DEFERRED, t->target, NULL, &rejected);
 
-		  /* else, thinks the trigger can't be evaluated yet, shouldn't happen */
+		      /* execute_activity() maybe include trigger and change the next pointer. we need get it again. */
+		      next = t->next;
+		      if (status == TR_RETURN_TRUE)
+			{
+			  /* successful processing, remove it from the list */
+			  remove_deferred_activity (c, t);
+
+			  /* reject can't happen here, even if it does, it is unclear what it would mean */
+			}
+		      else if (status == TR_RETURN_ERROR)
+			{
+			  /*
+			   * if an error happens, should we invalidate the transaction ?
+			   */
+			  ASSERT_ERROR_AND_SET (error);
+			}
+
+		      /* else, thinks the trigger can't be evaluated yet, shouldn't happen */
+		    }
 		}
 	    }
+	  while (t != tail && !error && (t = next));
 	}
 
       /*
@@ -6094,7 +6105,7 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 	  remove_deferred_context (c);
 	}
     }
-  tr_Current_depth--;
+  tr_Current_depth = 0;
 
   return error;
 }
