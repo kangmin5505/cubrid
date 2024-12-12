@@ -52,6 +52,7 @@
 #include "db_json.hpp"
 
 #include "dbtype.h"
+#include "trigger_manager.h"
 
 #ifndef DBDEF_HEADER_
 #define DBDEF_HEADER_
@@ -11861,17 +11862,14 @@ static int
 check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * list)
 {
   int error = NO_ERROR;
-  PT_NODE_TYPE node_type = PT_NODE_NONE;
 
   while (list && error == NO_ERROR)
     {
-      node_type = list->node_type;
-
-      if (node_type == PT_NAME && list->info.name.meta_class == PT_NORMAL)
+      if (PT_NODE_IS_NAME(list) && list->info.name.meta_class == PT_NORMAL)
 	{
 	  error = handle_name_node (parser, list);
 	}
-      else if (node_type == PT_EXPR)
+      else if (PT_NODE_IS_EXPR(list))
 	{
 	  error = handle_expr_node (parser, list);
 	}
@@ -11885,15 +11883,16 @@ static int
 handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
 {
   int error = NO_ERROR;
-  short flag = node->info.name.flag;
 
-  if (flag & PT_NAME_INFO_DOT_NAME)
+  if (PT_NAME_INFO_IS_FLAGED(node, PT_NAME_INFO_DOT_NAME))
     {
       error = check_trigger_correlation_names (node->info.name.resolved);
     }
   else
     {
-      error = (flag & PT_NAME_DEFAULTF_ACCEPTS) && (!(flag & PT_NAME_INFO_FILL_DEFAULT)) ? ER_FAILED : NO_ERROR;
+      error = (PT_NAME_INFO_IS_FLAGED(node, PT_NAME_DEFAULTF_ACCEPTS) &&
+                !PT_NAME_INFO_IS_FLAGED(node, PT_NAME_INFO_FILL_DEFAULT)) ?
+                ER_FAILED : NO_ERROR;
     }
 
   if (error == ER_FAILED)
@@ -11907,7 +11906,7 @@ handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
 static int
 check_trigger_correlation_names (const char *name)
 {
-  return strcmp (name, "new") == 0 || strcmp (name, "old") == 0 || strcmp (name, "obj") == 0 ? NO_ERROR : ER_FAILED;
+  return strcmp (name, OBJ_REFERENCE_NAME) == 0 || strcmp (name, NEW_REFERENCE_NAME) == 0 || strcmp (name, OLD_REFERENCE_NAME) == 0 ? NO_ERROR : ER_FAILED;
 }
 
 static int

@@ -236,6 +236,10 @@ extern int tr_Recursion_level_max;
 extern TR_TRIGLIST *tr_Deferred_triggers;
 extern TR_TRIGLIST *tr_Deferred_triggers_tail;
 
+extern const char *OBJ_REFERENCE_NAME;
+extern const char *NEW_REFERENCE_NAME;
+extern const char *OLD_REFERENCE_NAME;
+
 /* INTERFACE FUNCTIONS */
 
 /* Module control */

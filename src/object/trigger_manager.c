@@ -115,9 +115,9 @@ static const int TR_RETURN_TRUE = 1;
 
 static const int TR_EST_MAP_SIZE = 1024;
 
-static const char *OBJ_REFERENCE_NAME = "obj";
-static const char *NEW_REFERENCE_NAME = "new";
-static const char *OLD_REFERENCE_NAME = "old";
+const char *OBJ_REFERENCE_NAME = "obj";
+const char *NEW_REFERENCE_NAME = "new";
+const char *OLD_REFERENCE_NAME = "old";
 
 /*
  * Formerly had a semicolon at the end, not sure that is acceptable since
