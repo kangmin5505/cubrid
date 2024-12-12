@@ -11975,11 +11975,11 @@ check_insert_value_nodes (PARSER_CONTEXT * parser, PT_NODE * list)
 
   while (list && error == NO_ERROR)
     {
-      if (PT_NODE_IS_NAME(list) && list->info.name.meta_class == PT_NORMAL)
+      if (PT_NODE_IS_NAME (list) && list->info.name.meta_class == PT_NORMAL)
 	{
 	  error = handle_name_node (parser, list);
 	}
-      else if (PT_NODE_IS_EXPR(list))
+      else if (PT_NODE_IS_EXPR (list))
 	{
 	  error = handle_expr_node (parser, list);
 	}
@@ -11994,15 +11994,14 @@ handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
 {
   int error = NO_ERROR;
 
-  if (PT_NAME_INFO_IS_FLAGED(node, PT_NAME_INFO_DOT_NAME))
+  if (PT_NAME_INFO_IS_FLAGED (node, PT_NAME_INFO_DOT_NAME))
     {
       error = check_trigger_correlation_names (node->info.name.resolved);
     }
   else
     {
-      error = (PT_NAME_INFO_IS_FLAGED(node, PT_NAME_DEFAULTF_ACCEPTS) &&
-                !PT_NAME_INFO_IS_FLAGED(node, PT_NAME_INFO_FILL_DEFAULT)) ?
-                ER_FAILED : NO_ERROR;
+      error = (PT_NAME_INFO_IS_FLAGED (node, PT_NAME_DEFAULTF_ACCEPTS) &&
+	       !PT_NAME_INFO_IS_FLAGED (node, PT_NAME_INFO_FILL_DEFAULT)) ? ER_FAILED : NO_ERROR;
     }
 
   if (error == ER_FAILED)
@@ -12016,7 +12015,8 @@ handle_name_node (PARSER_CONTEXT * parser, PT_NODE * node)
 static int
 check_trigger_correlation_names (const char *name)
 {
-  return strcmp (name, OBJ_REFERENCE_NAME) == 0 || strcmp (name, NEW_REFERENCE_NAME) == 0 || strcmp (name, OLD_REFERENCE_NAME) == 0 ? NO_ERROR : ER_FAILED;
+  return strcmp (name, OBJ_REFERENCE_NAME) == 0 || strcmp (name, NEW_REFERENCE_NAME) == 0
+    || strcmp (name, OLD_REFERENCE_NAME) == 0 ? NO_ERROR : ER_FAILED;
 }
 
 static int
