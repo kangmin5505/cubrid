@@ -6038,7 +6038,7 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
       c_next = c->next;
       tr_Current_depth = 1;
 
-      while ((t = c->head) && !error)
+      for (t = c->head; t != NULL && !error; t = c->head)
 	{
 	  tr_Current_depth++;
 
@@ -6050,9 +6050,8 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 	      break;
 	    }
 
-	  tail = c->tail;	/* range [head, tail] */
-
-	  do
+	  /* range [head, tail] */
+	  for (tail = c->tail; t != NULL && !error; t = next)
 	    {
 	      next = t->next;
 	      trigger = t->trigger;
@@ -6093,8 +6092,12 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 		      /* else, thinks the trigger can't be evaluated yet, shouldn't happen */
 		    }
 		}
+
+                if (t == tail)
+                 {
+                        break;
+                 }
 	    }
-	  while (t != tail && !error && (t = next));
 	}
 
       /*
