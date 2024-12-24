@@ -6093,10 +6093,10 @@ tr_execute_deferred_activities (DB_OBJECT * trigger_object, DB_OBJECT * target)
 		    }
 		}
 
-                if (t == tail)
-                 {
-                        break;
-                 }
+	      if (t == tail)
+		{
+		  break;
+		}
 	    }
 	}
 
