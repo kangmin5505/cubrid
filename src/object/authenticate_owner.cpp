@@ -283,7 +283,7 @@ au_change_trigger_owner (MOP trigger_mop, MOP owner_mop)
    * so if the owner of class, serial, trigger changes, the unique_name must also change.
    */
 
-  error = obj_get (trigger_mop, TR_ATT_UNIQUE_NAME, &value);
+  error = obj_get (trigger_mop, CT_TRIGGER_ATTR_UNIQUE_NAME, &value);
   if (error != NO_ERROR)
     {
       ASSERT_ERROR ();
@@ -297,7 +297,7 @@ au_change_trigger_owner (MOP trigger_mop, MOP owner_mop)
     }
 
   /* Check if the owner to be changed is the same. */
-  error = obj_get (trigger_mop, TR_ATT_OWNER, &value);
+  error = obj_get (trigger_mop, CT_TRIGGER_ATTR_OWNER, &value);
   if (error != NO_ERROR)
     {
       ASSERT_ERROR ();
@@ -354,7 +354,7 @@ au_change_trigger_owner (MOP trigger_mop, MOP owner_mop)
 
   /* owner */
   db_make_object (&value, owner_mop);
-  error = obj_set (trigger_mop, TR_ATT_OWNER, &value);
+  error = obj_set (trigger_mop, CT_TRIGGER_ATTR_OWNER, &value);
   if (error != NO_ERROR)
     {
       ASSERT_ERROR ();

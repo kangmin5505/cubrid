@@ -232,6 +232,7 @@ catcls_init (void)
   ADD_TABLE_DEFINITION (CT_DUAL_NAME, system_catalog_initializer::get_dual());
   ADD_TABLE_DEFINITION (CT_SYNONYM_NAME, system_catalog_initializer::get_synonym());
   ADD_TABLE_DEFINITION (CT_DB_SERVER_NAME, system_catalog_initializer::get_server());
+  ADD_TABLE_DEFINITION (CT_TRIGGER_NAME, system_catalog_initializer::get_trigger());
 
   ADD_VIEW_DEFINITION (CTV_CLASS_NAME, system_catalog_initializer::get_view_class ());
   ADD_VIEW_DEFINITION (CTV_SUPER_CLASS_NAME, system_catalog_initializer::get_view_direct_super_class ());
@@ -1245,6 +1246,58 @@ namespace cubschema
     {
       {DB_CONSTRAINT_PRIMARY_KEY, "", {"link_name", "owner", nullptr}, false}
     },
+// authorization
+    {
+      // owner, grants
+      Au_dba_user, {}
+    },
+// initializer
+    nullptr
+	   );
+
+
+  }
+
+  system_catalog_definition
+  system_catalog_initializer::get_trigger ()
+  {
+
+    return system_catalog_definition (
+		   // name
+		   CT_TRIGGER_NAME,
+		   // columns
+    {
+        {CT_TRIGGER_ATTR_UNIQUE_NAME, "string"},
+        {CT_TRIGGER_ATTR_OWNER, AU_USER_CLASS_NAME},
+        {CT_TRIGGER_ATTR_NAME, "string"},
+        {CT_TRIGGER_ATTR_STATUS, "integer", [](DB_VALUE *value) {
+                return db_make_int (value, TR_STATUS_ACTIVE);
+        }},
+        {CT_TRIGGER_ATTR_PRIORITY, "double", [](DB_VALUE *value) {
+                return db_make_float(value, TR_LOWEST_PRIORITY);
+        }},
+        {CT_TRIGGER_ATTR_EVENT, "integer", [](DB_VALUE *value) {
+                return db_make_int(value, TR_EVENT_NULL);
+        }},
+        {CT_TRIGGER_ATTR_CLASS, "object"},
+        {CT_TRIGGER_ATTR_ATTRIBUTE, "string"},
+        {CT_TRIGGER_ATTR_CLASS_ATTRIBUTE, "integer", [](DB_VALUE *value) {
+                return db_make_int(value, 0);
+        }},
+        {CT_TRIGGER_ATTR_CONDITION_TYPE, "integer"},
+        {CT_TRIGGER_ATTR_CONDITION, "string"},
+        {CT_TRIGGER_ATTR_CONDITION_TIME, "integer", [](DB_VALUE *value) {
+                return db_make_int(value, TR_TIME_AFTER); 
+        }},
+        {CT_TRIGGER_ATTR_ACTION_TYPE, "integer"},
+        {CT_TRIGGER_ATTR_ACTION, "string"},
+        {CT_TRIGGER_ATTR_ACTION_TIME, "integer", [](DB_VALUE *value) {
+                return db_make_int(value, TR_TIME_AFTER);
+        }},
+        {CT_TRIGGER_ATTR_COMMENT, format_varchar(1024)},
+    },
+// constraints
+    {},
 // authorization
     {
       // owner, grants

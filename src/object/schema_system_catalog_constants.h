@@ -92,4 +92,24 @@
 #define CT_DBCHARSET_DEFAULT_COLLATION	  "default_collation"
 #define CT_DBCHARSET_CHAR_SIZE		  "char_size"
 
+/* Name of the trigger attributes */
+#define CT_TRIGGER_ATTR_UNIQUE_NAME          "unique_name"
+#define CT_TRIGGER_ATTR_OWNER                "owner"
+#define CT_TRIGGER_ATTR_NAME                 "name"
+#define CT_TRIGGER_ATTR_STATUS               "status"
+#define CT_TRIGGER_ATTR_PRIORITY             "priority"
+#define CT_TRIGGER_ATTR_EVENT                "event"
+#define CT_TRIGGER_ATTR_CLASS                "target_class"
+#define CT_TRIGGER_ATTR_ATTRIBUTE            "target_attribute"
+#define CT_TRIGGER_ATTR_CLASS_ATTRIBUTE      "target_class_attribute"
+#define CT_TRIGGER_ATTR_CONDITION_TYPE       "condition_type"
+#define CT_TRIGGER_ATTR_CONDITION            "condition"
+#define CT_TRIGGER_ATTR_CONDITION_TIME       "condition_time"
+#define CT_TRIGGER_ATTR_ACTION_TYPE          "action_type"
+#define CT_TRIGGER_ATTR_ACTION               "action_definition"
+#define CT_TRIGGER_ATTR_ACTION_TIME          "action_time"
+#define CT_TRIGGER_ATTR_ACTION_OLD           "action"
+#define CT_TRIGGER_ATTR_PROPERTIES           "properties"
+#define CT_TRIGGER_ATTR_COMMENT              "comment"
+
 #endif /* _SCHEMA_SYSTEM_CATALOG_CONSTANTS_H_ */

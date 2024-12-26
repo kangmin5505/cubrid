@@ -1090,7 +1090,7 @@ sm_define_view_trigger_spec (void)
 	  "[t].[action_time] AS [action_time], "
 	  "[t].[comment] AS [comment] "
 	"FROM "
-	  /* TR_CLASS_NAME */
+	  /* CT_TRIGGER_NAME*/
 	  "[%s] AS [t] "
 	  /* CT_CLASS_NAME */
 	  "LEFT OUTER JOIN [%s] AS [c] ON [t].[target_class] = [c].[class_of] "
@@ -1131,7 +1131,7 @@ sm_define_view_trigger_spec (void)
 		  ") "
 		"AND [au].[auth_type] = 'SELECT'"
 	    ")",
-	TR_CLASS_NAME,
+	CT_TRIGGER_NAME,
 	CT_CLASS_NAME,
 	AU_USER_CLASS_NAME,
 	AU_USER_CLASS_NAME,

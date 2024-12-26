@@ -93,7 +93,6 @@
  * a view.
  */
 
-
 /*
  * TR_RETURN_ codes
  *
@@ -127,26 +126,6 @@ static const char *OLD_REFERENCE_NAME = "old";
 
 static const char *EVAL_PREFIX = "EVALUATE ( ";
 static const char *EVAL_SUFFIX = " ) ";
-
-const char *TR_CLASS_NAME = "db_trigger";
-const char *TR_ATT_UNIQUE_NAME = "unique_name";
-const char *TR_ATT_NAME = "name";
-const char *TR_ATT_OWNER = "owner";
-const char *TR_ATT_EVENT = "event";
-const char *TR_ATT_STATUS = "status";
-const char *TR_ATT_PRIORITY = "priority";
-const char *TR_ATT_CLASS = "target_class";
-const char *TR_ATT_ATTRIBUTE = "target_attribute";
-const char *TR_ATT_CLASS_ATTRIBUTE = "target_class_attribute";
-const char *TR_ATT_CONDITION_TYPE = "condition_type";
-const char *TR_ATT_CONDITION_TIME = "condition_time";
-const char *TR_ATT_CONDITION = "condition";
-const char *TR_ATT_ACTION_TYPE = "action_type";
-const char *TR_ATT_ACTION_TIME = "action_time";
-const char *TR_ATT_ACTION = "action_definition";
-const char *TR_ATT_ACTION_OLD = "action";
-const char *TR_ATT_PROPERTIES = "properties";
-const char *TR_ATT_COMMENT = "comment";
 
 int tr_Current_depth = 0;
 int tr_Maximum_depth = TR_MAX_RECURSION_LEVEL;
@@ -249,7 +228,6 @@ static void tr_finish (TR_STATE * state);
 static int its_deleted (DB_OBJECT * object);
 
 static int map_flush_helper (const void *key, void *data, void *args);
-static int define_trigger_classes (void);
 
 static TR_RECURSION_DECISION tr_check_recursivity (OID oid, OID stack[], int stack_size, bool is_statement);
 
@@ -1014,7 +992,7 @@ trigger_to_object (TR_TRIGGER * trigger)
   object_p = NULL;
   obt_p = NULL;
 
-  class_p = db_find_class (TR_CLASS_NAME);
+  class_p = db_find_class (CT_TRIGGER_NAME);
   if (class_p == NULL)
     {
       goto error;
@@ -1027,55 +1005,55 @@ trigger_to_object (TR_TRIGGER * trigger)
     }
 
   db_make_object (&value, trigger->owner);
-  if (dbt_put_internal (obt_p, TR_ATT_OWNER, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_OWNER, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_string (&value, trigger->name);
-  if (dbt_put_internal (obt_p, TR_ATT_UNIQUE_NAME, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_UNIQUE_NAME, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_string (&value, sm_remove_qualifier_name (trigger->name));
-  if (dbt_put_internal (obt_p, TR_ATT_NAME, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_NAME, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_int (&value, trigger->status);
-  if (dbt_put_internal (obt_p, TR_ATT_STATUS, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_STATUS, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_float (&value, (float) trigger->priority);
-  if (dbt_put_internal (obt_p, TR_ATT_PRIORITY, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_PRIORITY, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_int (&value, trigger->event);
-  if (dbt_put_internal (obt_p, TR_ATT_EVENT, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_EVENT, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_object (&value, trigger->class_mop);
-  if (dbt_put_internal (obt_p, TR_ATT_CLASS, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_CLASS, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_string (&value, trigger->attribute);
-  if (dbt_put_internal (obt_p, TR_ATT_ATTRIBUTE, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_ATTRIBUTE, &value) != NO_ERROR)
     {
       goto error;
     }
 
   db_make_int (&value, trigger->class_attribute);
-  if (dbt_put_internal (obt_p, TR_ATT_CLASS_ATTRIBUTE, &value) != NO_ERROR)
+  if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_CLASS_ATTRIBUTE, &value) != NO_ERROR)
     {
       goto error;
     }
@@ -1083,19 +1061,19 @@ trigger_to_object (TR_TRIGGER * trigger)
   if (trigger->condition != NULL)
     {
       db_make_int (&value, trigger->condition->type);
-      if (dbt_put_internal (obt_p, TR_ATT_CONDITION_TYPE, &value) != NO_ERROR)
+      if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_CONDITION_TYPE, &value) != NO_ERROR)
 	{
 	  goto error;
 	}
 
       db_make_int (&value, trigger->condition->time);
-      if (dbt_put_internal (obt_p, TR_ATT_CONDITION_TIME, &value) != NO_ERROR)
+      if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_CONDITION_TIME, &value) != NO_ERROR)
 	{
 	  goto error;
 	}
 
       db_make_string (&value, trigger->condition->source);
-      if (dbt_put_internal (obt_p, TR_ATT_CONDITION, &value) != NO_ERROR)
+      if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_CONDITION, &value) != NO_ERROR)
 	{
 	  goto error;
 	}
@@ -1104,23 +1082,23 @@ trigger_to_object (TR_TRIGGER * trigger)
   if (trigger->action != NULL)
     {
       db_make_int (&value, trigger->action->type);
-      if (dbt_put_internal (obt_p, TR_ATT_ACTION_TYPE, &value) != NO_ERROR)
+      if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_ACTION_TYPE, &value) != NO_ERROR)
 	{
 	  goto error;
 	}
 
       db_make_int (&value, trigger->action->time);
-      if (dbt_put_internal (obt_p, TR_ATT_ACTION_TIME, &value) != NO_ERROR)
+      if (dbt_put_internal (obt_p, CT_TRIGGER_ATTR_ACTION_TIME, &value) != NO_ERROR)
 	{
 	  goto error;
 	}
 
       db_make_string_copy (&value, trigger->action->source);
-      err = dbt_put_internal (obt_p, TR_ATT_ACTION, &value);
+      err = dbt_put_internal (obt_p, CT_TRIGGER_ATTR_ACTION, &value);
       if (err != NO_ERROR)
 	{
 	  /* hack, try old name before aborting */
-	  err = dbt_put_internal (obt_p, TR_ATT_ACTION_OLD, &value);
+	  err = dbt_put_internal (obt_p, CT_TRIGGER_ATTR_ACTION_OLD, &value);
 	  if (err != NO_ERROR)
 	    {
 	      pr_clear_value (&value);
@@ -1131,7 +1109,7 @@ trigger_to_object (TR_TRIGGER * trigger)
     }
 
   db_make_string_copy (&value, trigger->comment);
-  err = dbt_put_internal (obt_p, TR_ATT_COMMENT, &value);
+  err = dbt_put_internal (obt_p, CT_TRIGGER_ATTR_COMMENT, &value);
   pr_clear_value (&value);
   if (err != NO_ERROR)
     {
@@ -1210,7 +1188,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
   trigger->chn = WS_CHN (obj);
 
   /* OWNER */
-  if (db_get (object, TR_ATT_OWNER, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_OWNER, &value))
     {
       goto error;
     }
@@ -1228,7 +1206,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* NAME */
-  if (db_get (object, TR_ATT_UNIQUE_NAME, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_UNIQUE_NAME, &value))
     {
       goto error;
     }
@@ -1244,7 +1222,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
   db_value_clear (&value);
 
   /* STATUS */
-  if (db_get (object, TR_ATT_STATUS, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_STATUS, &value))
     {
       goto error;
     }
@@ -1255,7 +1233,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* PRIORITY */
-  if (db_get (object, TR_ATT_PRIORITY, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_PRIORITY, &value))
     {
       goto error;
     }
@@ -1266,7 +1244,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* EVENT */
-  if (db_get (object, TR_ATT_EVENT, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_EVENT, &value))
     {
       goto error;
     }
@@ -1277,7 +1255,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* CLASS */
-  if (db_get (object, TR_ATT_CLASS, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_CLASS, &value))
     {
       goto error;
     }
@@ -1307,7 +1285,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* ATTRIBUTE */
-  if (db_get (object, TR_ATT_ATTRIBUTE, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_ATTRIBUTE, &value))
     {
       goto error;
     }
@@ -1324,7 +1302,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
   db_value_clear (&value);
 
   /* CLASS ATTRIBUTE */
-  if (db_get (object, TR_ATT_CLASS_ATTRIBUTE, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_CLASS_ATTRIBUTE, &value))
     {
       goto error;
     }
@@ -1335,7 +1313,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* CONDITION TYPE */
-  if (db_get (object, TR_ATT_CONDITION_TYPE, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_CONDITION_TYPE, &value))
     {
       goto error;
     }
@@ -1351,7 +1329,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
       trigger->condition->type = (DB_TRIGGER_ACTION) db_get_int (&value);
 
       /* CONDITION TIME */
-      if (db_get (object, TR_ATT_CONDITION_TIME, &value))
+      if (db_get (object, CT_TRIGGER_ATTR_CONDITION_TIME, &value))
 	{
 	  goto error;
 	}
@@ -1362,7 +1340,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
 	}
 
       /* CONDITION SOURCE */
-      if (db_get (object, TR_ATT_CONDITION, &value))
+      if (db_get (object, CT_TRIGGER_ATTR_CONDITION, &value))
 	{
 	  goto error;
 	}
@@ -1379,7 +1357,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* ACTION TYPE */
-  if (db_get (object, TR_ATT_ACTION_TYPE, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_ACTION_TYPE, &value))
     {
       goto error;
     }
@@ -1395,7 +1373,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
       trigger->action->type = (DB_TRIGGER_ACTION) db_get_int (&value);
 
       /* ACTION TIME */
-      if (db_get (object, TR_ATT_ACTION_TIME, &value))
+      if (db_get (object, CT_TRIGGER_ATTR_ACTION_TIME, &value))
 	{
 	  goto error;
 	}
@@ -1406,10 +1384,10 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
 	}
 
       /* ACTION SOURCE */
-      if (db_get (object, TR_ATT_ACTION, &value))
+      if (db_get (object, CT_TRIGGER_ATTR_ACTION, &value))
 	{
 	  /* hack, try old name if error */
-	  if (db_get (object, TR_ATT_ACTION_OLD, &value))
+	  if (db_get (object, CT_TRIGGER_ATTR_ACTION_OLD, &value))
 	    {
 	      goto error;
 	    }
@@ -1427,7 +1405,7 @@ object_to_trigger (DB_OBJECT * object, TR_TRIGGER * trigger)
     }
 
   /* COMMENT */
-  if (db_get (object, TR_ATT_COMMENT, &value))
+  if (db_get (object, CT_TRIGGER_ATTR_COMMENT, &value))
     {
       goto error;
     }
@@ -2889,7 +2867,7 @@ tr_delete_schema_cache (TR_SCHEMA_CACHE * cache, DB_OBJECT * class_object)
 		       * it but be prepared to recognize it when the trigger
 		       * is loaded again.
 		       */
-		      (void) db_put_internal (m->op, TR_ATT_STATUS, &value);
+		      (void) db_put_internal (m->op, CT_TRIGGER_ATTR_STATUS, &value);
 		    }
 		}
 	    }
@@ -6611,7 +6589,7 @@ tr_is_trigger (DB_OBJECT * trigger_object, int *status)
 
   *status = false;
 
-  tclass = sm_find_class (TR_CLASS_NAME);	/* need to cache this ! */
+  tclass = sm_find_class (CT_TRIGGER_NAME);	/* need to cache this ! */
   oclass = sm_get_class (trigger_object);
 
   if (tclass == oclass)
@@ -6897,7 +6875,7 @@ tr_rename_trigger (DB_OBJECT * trigger_object, const char *name, bool call_from_
 
   /* might need to abort the transaction here */
   db_make_string (&value, new_name);
-  error = db_put_internal (trigger_object, TR_ATT_UNIQUE_NAME, &value);
+  error = db_put_internal (trigger_object, CT_TRIGGER_ATTR_UNIQUE_NAME, &value);
   if (error != NO_ERROR)
     {
       ASSERT_ERROR ();
@@ -6907,7 +6885,7 @@ tr_rename_trigger (DB_OBJECT * trigger_object, const char *name, bool call_from_
   pr_clear_value (&value);
 
   db_make_string (&value, sm_remove_qualifier_name (new_name));
-  error = db_put_internal (trigger_object, TR_ATT_NAME, &value);
+  error = db_put_internal (trigger_object, CT_TRIGGER_ATTR_NAME, &value);
   if (error != NO_ERROR)
     {
       ASSERT_ERROR ();
@@ -7001,7 +6979,7 @@ tr_set_status (DB_OBJECT * trigger_object, DB_TRIGGER_STATUS status, bool call_f
       oldstatus = trigger->status;
       trigger->status = status;
       db_make_int (&value, status);
-      if (db_put_internal (trigger_object, TR_ATT_STATUS, &value))
+      if (db_put_internal (trigger_object, CT_TRIGGER_ATTR_STATUS, &value))
 	{
 	  ASSERT_ERROR_AND_SET (error);
 
@@ -7068,7 +7046,7 @@ tr_set_priority (DB_OBJECT * trigger_object, double priority, bool call_from_api
       oldpri = trigger->priority;
       trigger->priority = priority;
       db_make_double (&value, priority);
-      if (db_put_internal (trigger_object, TR_ATT_PRIORITY, &value))
+      if (db_put_internal (trigger_object, CT_TRIGGER_ATTR_PRIORITY, &value))
 	{
 	  ASSERT_ERROR_AND_SET (error);
 
@@ -7148,7 +7126,7 @@ tr_set_comment (DB_OBJECT * trigger_object, const char *comment, bool call_from_
       else
 	{
 	  db_make_string_copy (&value, comment);
-	  if (db_put_internal (trigger_object, TR_ATT_COMMENT, &value))
+	  if (db_put_internal (trigger_object, CT_TRIGGER_ATTR_COMMENT, &value))
 	    {
 	      error = (er_errid () != NO_ERROR) ? er_errid () : ER_FAILED;
 	      trigger->comment = oldcomment;
@@ -7339,157 +7317,6 @@ tr_dump (FILE * fpp)
     }
 }
 
-
-/*
- * TRIGGER DATABASE INSTALLATION
- */
-
-/*
- * define_trigger_classes() - This defines the classes necessary for storing triggers.
- *    return: error code
- *
- * Note:
- *    Currently there is only a single trigger object class.
- *    This should only be called during createdb.
- */
-static int
-define_trigger_classes (void)
-{
-  DB_CTMPL *tmp;
-  DB_OBJECT *class_mop;
-  DB_VALUE value;
-
-  tmp = NULL;
-
-  tmp = dbt_create_class (TR_CLASS_NAME);
-  if (tmp == NULL)
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_UNIQUE_NAME, "string", NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_OWNER, AU_USER_CLASS_NAME, NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_NAME, "string", NULL))
-    {
-      goto tmp_error;
-    }
-
-  db_make_int (&value, TR_STATUS_ACTIVE);
-  if (dbt_add_attribute (tmp, TR_ATT_STATUS, "integer", &value))
-    {
-      goto tmp_error;
-    }
-
-  db_make_float (&value, TR_LOWEST_PRIORITY);
-  if (dbt_add_attribute (tmp, TR_ATT_PRIORITY, "double", &value))
-    {
-      goto tmp_error;
-    }
-
-  db_make_int (&value, TR_EVENT_NULL);
-  if (dbt_add_attribute (tmp, TR_ATT_EVENT, "integer", &value))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_CLASS, "object", NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_ATTRIBUTE, "string", NULL))
-    {
-      goto tmp_error;
-    }
-
-  db_make_int (&value, 0);
-  if (dbt_add_attribute (tmp, TR_ATT_CLASS_ATTRIBUTE, "integer", &value))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_CONDITION_TYPE, "integer", NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_CONDITION, "string", NULL))
-    {
-      goto tmp_error;
-    }
-
-  db_make_int (&value, TR_TIME_AFTER);
-  if (dbt_add_attribute (tmp, TR_ATT_CONDITION_TIME, "integer", NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_ACTION_TYPE, "integer", NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_ACTION, "string", NULL))
-    {
-      goto tmp_error;
-    }
-
-  db_make_int (&value, TR_TIME_AFTER);
-  if (dbt_add_attribute (tmp, TR_ATT_ACTION_TIME, "integer", NULL))
-    {
-      goto tmp_error;
-    }
-
-  if (dbt_add_attribute (tmp, TR_ATT_COMMENT, "varchar(1024)", NULL))
-    {
-      goto tmp_error;
-    }
-
-  class_mop = dbt_finish_class (tmp);
-  if (class_mop == NULL)
-    {
-      goto tmp_error;
-    }
-
-  if (locator_create_heap_if_needed (class_mop, false) == NULL)
-    {
-      goto tmp_error;
-    }
-
-  return NO_ERROR;
-
-tmp_error:
-  if (tmp != NULL)
-    {
-      dbt_abort_class (tmp);
-    }
-
-  ASSERT_ERROR ();
-  return er_errid ();
-}
-
-/*
- * tr_install() - Trigger installation function.
- *    return: error code
- *
- * Note:
- *    A system class called TRIGGER is created, and initialized.
- *    The function should be called exactly once in createdb.
- */
-int
-tr_install (void)
-{
-  return (define_trigger_classes ());
-}
-
 /*
  * tr_get_execution_state() - Returns the current trigger execution state.
  *    return: bool
@@ -7521,7 +7348,7 @@ tr_set_execution_state (bool new_state)
 const char *
 tr_get_class_name (void)
 {
-  return TR_CLASS_NAME;
+  return CT_TRIGGER_NAME;
 }
 
 #if defined(ENABLE_UNUSED_FUNCTION)
@@ -7538,7 +7365,7 @@ tr_downcase_all_trigger_info (void)
   DB_VALUE value;
   char *attribute;
 
-  class_mop = sm_find_class (TR_CLASS_NAME);
+  class_mop = sm_find_class (CT_TRIGGER_NAME);
   if (class_mop == NULL)
     {
       return ER_FAILED;

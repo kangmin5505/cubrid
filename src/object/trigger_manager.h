@@ -195,31 +195,6 @@ typedef enum
   TR_DECISION_DO_NOT_CONTINUE
 } TR_RECURSION_DECISION;
 
-/* TRIGGER OBJECT ATTRIBUTES */
-/*
- * Names of the trigger class and its attributes.
- */
-
-extern const char *TR_CLASS_NAME;
-extern const char *TR_ATT_UNIQUE_NAME;
-extern const char *TR_ATT_NAME;
-extern const char *TR_ATT_OWNER;
-extern const char *TR_ATT_EVENT;
-extern const char *TR_ATT_STATUS;
-extern const char *TR_ATT_PRIORITY;
-extern const char *TR_ATT_CLASS;
-extern const char *TR_ATT_ATTRIBUTE;
-extern const char *TR_ATT_CLASS_ATTRIBUTE;
-extern const char *TR_ATT_CONDITION_TYPE;
-extern const char *TR_ATT_CONDITION_TIME;
-extern const char *TR_ATT_CONDITION;
-extern const char *TR_ATT_ACTION_TYPE;
-extern const char *TR_ATT_ACTION_TIME;
-extern const char *TR_ATT_ACTION;
-extern const char *TR_ATT_ACTION_OLD;
-extern const char *TR_ATT_PROPERTIES;
-extern const char *TR_ATT_COMMENT;
-
 extern int tr_Current_depth;
 extern int tr_Maximum_depth;
 extern bool tr_Invalid_transaction;
@@ -243,7 +218,6 @@ extern TR_TRIGLIST *tr_Deferred_triggers_tail;
 extern void tr_init (void);
 extern void tr_final (void);
 extern void tr_dump (FILE * fpp);	/* debug status */
-extern int tr_install (void);
 
 /* Global trigger firing state : enable/disable functions */
 
