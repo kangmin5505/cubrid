@@ -1996,7 +1996,7 @@ namespace cubschema
       {CT_DBCHARSET_CHARSET_ID, "integer"},
       {CT_DBCHARSET_CHARSET_NAME, format_varchar (32)},
       {CT_DBCHARSET_DEFAULT_COLLATION, format_varchar (32)},
-      {CT_DBCHARSET_CHAR_SIZE, "int"},
+      {CT_DBCHARSET_CHAR_SIZE, "integer"},
       // query specs
       {attribute_kind::QUERY_SPEC, sm_define_view_db_charset_spec ()}
     },
