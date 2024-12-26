@@ -40,8 +40,8 @@ extern EXPORT_IMPORT bool sm_is_system_vclass (const std::string_view name);
 struct db_object;
 
 extern EXPORT_IMPORT int catcls_add_data_type (struct db_object *class_mop);
-extern EXPORT_IMPORT int catcls_add_charsets (struct db_object *class_mop);
-extern EXPORT_IMPORT int catcls_add_collations (struct db_object *class_mop);
+extern EXPORT_IMPORT int catcls_add_charset (struct db_object *class_mop);
+extern EXPORT_IMPORT int catcls_add_collation (struct db_object *class_mop);
 #endif
 
 #endif /* _SCHEMA_SYSTEM_CATALOG_HPP_ */

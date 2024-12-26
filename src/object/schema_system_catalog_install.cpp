@@ -86,7 +86,7 @@ catcls_add_data_type (struct db_object *class_mop)
 }
 
 int
-catcls_add_collations (struct db_object *class_mop)
+catcls_add_collation (struct db_object *class_mop)
 {
   int i;
   int count_collations;
@@ -151,7 +151,7 @@ catcls_add_collations (struct db_object *class_mop)
 }
 
 int
-catcls_add_charsets (struct db_object *class_mop)
+catcls_add_charset (struct db_object *class_mop)
 {
   int i;
   int count_collations;
@@ -1092,7 +1092,7 @@ namespace cubschema
       Au_dba_user, {}
     },
 // initializer
-    catcls_add_collations
+    catcls_add_collation
 	   );
 
 
@@ -1120,7 +1120,7 @@ namespace cubschema
       Au_dba_user, {}
     },
 // initializer
-    catcls_add_charsets
+    catcls_add_charset
 	   );
 
 

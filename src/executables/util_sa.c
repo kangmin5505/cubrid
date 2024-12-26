@@ -4313,7 +4313,7 @@ synccoll_force (void)
       return status;
     }
 
-  if (catcls_add_collations (class_mop) != NO_ERROR)
+  if (catcls_add_collation (class_mop) != NO_ERROR)
     {
       status = EXIT_FAILURE;
     }
