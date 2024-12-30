@@ -641,7 +641,7 @@ namespace cubschema
 		   // columns
     {
       {"class_of", CT_CLASS_NAME},
-      {"spec", format_varchar (1073741823)}
+      {"spec", format_varchar (SM_MAX_STRING_LENGTH)}
     },
 // constraints
     {
@@ -676,7 +676,7 @@ namespace cubschema
       {"is_reverse", "integer"},
       {"is_primary_key", "integer"},
       {"is_foreign_key", "integer"},
-      {"filter_expression", format_varchar (1073741823)},
+      {"filter_expression", format_varchar (SM_MAX_STRING_LENGTH)},
       {"have_function", "integer"},
       {"comment", format_varchar (1024)},
       {"status", "integer"}
@@ -913,9 +913,9 @@ namespace cubschema
       {"is_static", "integer"},
       {"is_system_generated", "integer"},
       {"stype", "integer"},
-      {"scode", format_varchar (1073741823)},
+      {"scode", format_varchar (SM_MAX_STRING_LENGTH)},
       {"otype", "integer"},
-      {"ocode", format_varchar (1073741823)}
+      {"ocode", format_varchar (SM_MAX_STRING_LENGTH)}
     },
 // constraints
     {
@@ -1414,7 +1414,7 @@ namespace cubschema
     {
       {"vclass_name", format_varchar (255)},
       {"owner_name", format_varchar (255)},
-      {"vclass_def", format_varchar (1073741823)},
+      {"vclass_def", format_varchar (SM_MAX_STRING_LENGTH)},
       {"comment", format_varchar (2048)},
       // query specs
       {attribute_kind::QUERY_SPEC, sm_define_view_vclass_spec ()}
@@ -1694,7 +1694,7 @@ namespace cubschema
       {"is_deduplicate", format_varchar (3)},
       {"deduplicate_key_level", "smallint"},
 #endif
-      {"filter_expression", format_varchar (1073741823)},
+      {"filter_expression", format_varchar (SM_MAX_STRING_LENGTH)},
       {"have_function", format_varchar (3)},
       {"comment", format_varchar (1024)},
       {"status", format_varchar (255)},
@@ -1888,7 +1888,7 @@ namespace cubschema
       {"authid", format_varchar (16)},
       {"target", format_varchar (4096)},
       {"owner", format_varchar (256)},
-      {"code", format_varchar (1073741823)},
+      {"code", format_varchar (SM_MAX_STRING_LENGTH)},
       {"comment", format_varchar (1024)},
       // query specs
       {attribute_kind::QUERY_SPEC, sm_define_view_stored_procedure_spec ()}
