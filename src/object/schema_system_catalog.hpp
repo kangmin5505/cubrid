@@ -28,13 +28,8 @@
 
 #include "porting.h"
 
-extern EXPORT_IMPORT void catcls_init (void);
-extern EXPORT_IMPORT int catcls_install (void);
-
-extern EXPORT_IMPORT bool sm_check_system_class_by_name (const std::string_view class_name);
-
-extern EXPORT_IMPORT bool sm_is_system_class (const std::string_view name);
-extern EXPORT_IMPORT bool sm_is_system_vclass (const std::string_view name);
-
+EXPORT_IMPORT bool sm_check_system_class_by_name (const std::string_view class_name);
+EXPORT_IMPORT bool sm_is_system_class (const std::string_view name);
+EXPORT_IMPORT bool sm_is_system_vclass (const std::string_view name);
 
 #endif /* _SCHEMA_SYSTEM_CATALOG_HPP_ */

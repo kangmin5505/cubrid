@@ -87,7 +87,7 @@
 #include "object_primitive.h"
 #include "connection_globals.h"
 #include "host_lookup.h"
-#include "schema_system_catalog.hpp"
+#include "schema_system_catalog_install.hpp"
 #include "sp_catalog.hpp"
 
 #include "authenticate_context.hpp"
