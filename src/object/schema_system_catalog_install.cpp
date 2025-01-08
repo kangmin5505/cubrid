@@ -220,6 +220,34 @@ catcls_add_dual (MOP class_mop)
 }
 
 /* ========================================================================== */
+/* DEFAULT VALUE FUNCTIONS */
+/* ========================================================================== */
+
+std::function<int (DB_VALUE *)> catcls_dvalue_func_int (int val)
+{
+  return [val] (DB_VALUE *value)
+  {
+    return db_make_int (value, val);
+  };
+}
+
+std::function<int (DB_VALUE *)> catcls_dvalue_func_double (double val)
+{
+  return [val] (DB_VALUE *value)
+  {
+    return db_make_double (value, val);
+  };
+}
+
+std::function<int (DB_VALUE *)> catcls_dvalue_func_numeric (DB_C_NUMERIC val, const int precision, const int scale)
+{
+  return [val, precision, scale] (DB_VALUE *value)
+  {
+    return db_make_numeric (value, val, precision, scale);
+  };
+}
+
+/* ========================================================================== */
 /* MAIN APIS */
 /* ========================================================================== */
 
@@ -710,10 +738,7 @@ namespace cubschema
       {"key_order", "integer"},
       {"asc_desc", "integer"},
       {
-	"key_prefix_length", "integer", [] (DB_VALUE* val)
-	{
-	  return db_make_int (val, -1);
-	}
+	"key_prefix_length", "integer", catcls_dvalue_func_int (-1)
       },
       {"func", format_varchar (1023)}
     },
@@ -928,39 +953,24 @@ namespace cubschema
       {"name", "string"},
       {"owner", AU_USER_CLASS_NAME},
       {
-	"current_val", format_numeric (DB_MAX_NUMERIC_PRECISION, 0), [] (DB_VALUE* val)
-	{
-	  return db_make_numeric (val, (DB_C_NUMERIC) "1", DB_MAX_NUMERIC_PRECISION, 0);
-	}
+	"current_val", format_numeric (DB_MAX_NUMERIC_PRECISION, 0), catcls_dvalue_func_numeric ((DB_C_NUMERIC)"1", DB_MAX_NUMERIC_PRECISION, 0)
       },
       {
-	"increment_val", format_numeric (DB_MAX_NUMERIC_PRECISION, 0), [] (DB_VALUE* val)
-	{
-	  return db_make_numeric (val, (DB_C_NUMERIC) "1", DB_MAX_NUMERIC_PRECISION, 0);
-	}
+	"increment_val", format_numeric (DB_MAX_NUMERIC_PRECISION, 0), catcls_dvalue_func_numeric ((DB_C_NUMERIC)"1", DB_MAX_NUMERIC_PRECISION, 0)
       },
       {"max_val", format_numeric (DB_MAX_NUMERIC_PRECISION, 0)},
       {"min_val", format_numeric (DB_MAX_NUMERIC_PRECISION, 0)},
       {
-	"cyclic", "integer", [] (DB_VALUE* val)
-	{
-	  return db_make_int (val, 0);
-	}
+	"cyclic", "integer", catcls_dvalue_func_int (0)
       },
       {
-	"started", "integer", [] (DB_VALUE* val)
-	{
-	  return db_make_int (val, 0);
-	}
+	"started", "integer", catcls_dvalue_func_int (0)
       },
       {"class_name", "string"},
       {"attr_name", "string"},
       {attribute_kind::CLASS_METHOD, "change_serial_owner", "au_change_serial_owner_method"},
       {
-	"cached_num", "integer", [] (DB_VALUE* val)
-	{
-	  return db_make_int (val, 0);
-	}
+	"cached_num", "integer", catcls_dvalue_func_int (0)
       },
       {"comment", format_varchar (1024)},
     },
@@ -1136,10 +1146,7 @@ namespace cubschema
       {"name", format_varchar (255)},
       {"owner", AU_USER_CLASS_NAME},
       {
-	"is_public", "integer", [] (DB_VALUE* val)
-	{
-	  return db_make_int (val, 0);
-	}
+	"is_public", "integer", catcls_dvalue_func_int (0)
       },
       {"target_unique_name", format_varchar (255)},
       {"target_name", format_varchar (255)},
@@ -1211,46 +1218,28 @@ namespace cubschema
       {CT_TRIGGER_ATTR_OWNER, AU_USER_CLASS_NAME},
       {CT_TRIGGER_ATTR_NAME, "string"},
       {
-	CT_TRIGGER_ATTR_STATUS, "integer", [] (DB_VALUE *value)
-	{
-	  return db_make_int (value, TR_STATUS_ACTIVE);
-	}
+	CT_TRIGGER_ATTR_STATUS, "integer", catcls_dvalue_func_int (TR_STATUS_ACTIVE)
       },
       {
-	CT_TRIGGER_ATTR_PRIORITY, "double", [] (DB_VALUE *value)
-	{
-	  return db_make_float (value, TR_LOWEST_PRIORITY);
-	}
+	CT_TRIGGER_ATTR_PRIORITY, "double", catcls_dvalue_func_double (TR_LOWEST_PRIORITY)
       },
       {
-	CT_TRIGGER_ATTR_EVENT, "integer", [] (DB_VALUE *value)
-	{
-	  return db_make_int (value, TR_EVENT_NULL);
-	}
+	CT_TRIGGER_ATTR_EVENT, "integer", catcls_dvalue_func_int (TR_EVENT_NULL)
       },
       {CT_TRIGGER_ATTR_CLASS, "object"},
       {CT_TRIGGER_ATTR_ATTRIBUTE, "string"},
       {
-	CT_TRIGGER_ATTR_CLASS_ATTRIBUTE, "integer", [] (DB_VALUE *value)
-	{
-	  return db_make_int (value, 0);
-	}
+	CT_TRIGGER_ATTR_CLASS_ATTRIBUTE, "integer", catcls_dvalue_func_int (0)
       },
       {CT_TRIGGER_ATTR_CONDITION_TYPE, "integer"},
       {CT_TRIGGER_ATTR_CONDITION, "string"},
       {
-	CT_TRIGGER_ATTR_CONDITION_TIME, "integer", [] (DB_VALUE *value)
-	{
-	  return db_make_int (value, TR_TIME_AFTER);
-	}
+	CT_TRIGGER_ATTR_CONDITION_TIME, "integer", catcls_dvalue_func_int (TR_TIME_AFTER)
       },
       {CT_TRIGGER_ATTR_ACTION_TYPE, "integer"},
       {CT_TRIGGER_ATTR_ACTION, "string"},
       {
-	CT_TRIGGER_ATTR_ACTION_TIME, "integer", [] (DB_VALUE *value)
-	{
-	  return db_make_int (value, TR_TIME_AFTER);
-	}
+	CT_TRIGGER_ATTR_ACTION_TIME, "integer", catcls_dvalue_func_int (TR_TIME_AFTER)
       },
       {CT_TRIGGER_ATTR_COMMENT, format_varchar (1024)},
     },
