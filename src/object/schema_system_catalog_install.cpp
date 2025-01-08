@@ -1886,6 +1886,7 @@ namespace cubschema
       {"arg_count", "integer"},
       {"lang", format_varchar (16)},
       {"authid", format_varchar (16)},
+      {"is_deterministic", format_varchar(3)},
       {"target", format_varchar (4096)},
       {"owner", format_varchar (256)},
       {"code", format_varchar (SM_MAX_STRING_LENGTH)},
