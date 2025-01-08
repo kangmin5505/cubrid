@@ -804,7 +804,7 @@ namespace cubschema
 
     return system_catalog_definition (
 		   // name
-		   CT_PARTITION_NAME,
+		   CT_DATATYPE_NAME,
 		   // columns
     {
       {"type_id", "integer"},
