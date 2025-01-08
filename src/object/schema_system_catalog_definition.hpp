@@ -28,8 +28,9 @@
 #include <string_view>
 #include <vector>
 #include <optional>
+#include <functional>
 
-#include "work_space.h" // struct db_object
+#include "dbtype_def.h"
 
 namespace cubschema
 {
@@ -92,7 +93,7 @@ namespace cubschema
   {
     using attr_vec_type = std::vector <attribute>;
     using cstr_vec_type = std::vector <constraint>;
-    using row_init_type = std::function<int (struct db_object *)>;
+    using row_init_type = std::function<int (MOP)>;
 
     const std::string name;
     const attr_vec_type attributes;

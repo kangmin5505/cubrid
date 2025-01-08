@@ -36,12 +36,5 @@ extern EXPORT_IMPORT bool sm_check_system_class_by_name (const std::string_view 
 extern EXPORT_IMPORT bool sm_is_system_class (const std::string_view name);
 extern EXPORT_IMPORT bool sm_is_system_vclass (const std::string_view name);
 
-#if defined (CS_MODE) || defined (SA_MODE)
-struct db_object;
-
-extern EXPORT_IMPORT int catcls_add_data_type (struct db_object *class_mop);
-extern EXPORT_IMPORT int catcls_add_charset (struct db_object *class_mop);
-extern EXPORT_IMPORT int catcls_add_collation (struct db_object *class_mop);
-#endif
 
 #endif /* _SCHEMA_SYSTEM_CATALOG_HPP_ */

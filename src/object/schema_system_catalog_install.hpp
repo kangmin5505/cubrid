@@ -108,5 +108,15 @@ const char *sm_define_view_db_collation_spec (void);
 const char *sm_define_view_db_charset_spec (void);
 const char *sm_define_view_synonym_spec (void);
 const char *sm_define_view_db_server_spec (void);
+#if defined(CS_MODE) || defined(SA_MODE)
+
+#include "dbtype_def.h"
+
+EXPORT_IMPORT int catcls_add_dual(MOP class_mop);
+EXPORT_IMPORT int catcls_add_data_type(MOP class_mop);
+EXPORT_IMPORT int catcls_add_charset(MOP class_mop);
+EXPORT_IMPORT int catcls_add_collation(MOP class_mop);
+
+#endif
 
 #endif /* _SCHEMA_SYSTEM_CATALOG_INSTALL_HPP_ */

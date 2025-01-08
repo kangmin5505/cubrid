@@ -70,6 +70,7 @@
 #include "thread_manager.hpp"
 #include "log_volids.hpp"
 #include "schema_system_catalog.hpp"
+#include "schema_system_catalog_install.hpp"
 
 #if defined (SUPPRESS_STRLEN_WARNING)
 #define strlen(s1)  ((int) strlen(s1))

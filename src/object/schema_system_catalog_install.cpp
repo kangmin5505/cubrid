@@ -23,7 +23,7 @@
 
 #include "schema_system_catalog_install.hpp"
 
-#include "schema_system_catalog.hpp"
+#include "schema_system_catalog_install_query_spec.hpp"
 #include "cnv.h"
 #include "db.h"
 #include "dbtype_function.h"
@@ -41,7 +41,7 @@ using namespace std::literals;
 /* NEW DEFINITION (initializers for CLASS) */
 /* ========================================================================== */
 int
-catcls_add_data_type (struct db_object *class_mop)
+catcls_add_data_type (MOP class_mop)
 {
   DB_OBJECT *obj;
   DB_VALUE val;
@@ -86,7 +86,7 @@ catcls_add_data_type (struct db_object *class_mop)
 }
 
 int
-catcls_add_collation (struct db_object *class_mop)
+catcls_add_collation (MOP class_mop)
 {
   int i;
   int count_collations;
@@ -151,7 +151,7 @@ catcls_add_collation (struct db_object *class_mop)
 }
 
 int
-catcls_add_charset (struct db_object *class_mop)
+catcls_add_charset (MOP class_mop)
 {
   int i;
   int count_collations;
@@ -194,7 +194,7 @@ catcls_add_charset (struct db_object *class_mop)
 }
 
 int
-catcls_add_dual(struct db_object *class_mop)
+catcls_add_dual(MOP class_mop)
     {
       DB_VALUE val;
       int error_code = NO_ERROR;
