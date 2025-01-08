@@ -85,17 +85,17 @@ namespace cubschema
   };
 }
 
-EXPORT_IMPORT void catcls_init(void);
-EXPORT_IMPORT int catcls_install(void);
+EXPORT_IMPORT void catcls_init (void);
+EXPORT_IMPORT int catcls_install (void);
 
 #if defined(CS_MODE) || defined(SA_MODE)
 
 #include "dbtype_def.h"
 
-EXPORT_IMPORT int catcls_add_dual(MOP class_mop);
-EXPORT_IMPORT int catcls_add_data_type(MOP class_mop);
-EXPORT_IMPORT int catcls_add_charset(MOP class_mop);
-EXPORT_IMPORT int catcls_add_collation(MOP class_mop);
+EXPORT_IMPORT int catcls_add_dual (MOP class_mop);
+EXPORT_IMPORT int catcls_add_data_type (MOP class_mop);
+EXPORT_IMPORT int catcls_add_charset (MOP class_mop);
+EXPORT_IMPORT int catcls_add_collation (MOP class_mop);
 
 #endif
 
