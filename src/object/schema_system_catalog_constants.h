@@ -92,7 +92,8 @@
 #define CT_DBCHARSET_DEFAULT_COLLATION	  "default_collation"
 #define CT_DBCHARSET_CHAR_SIZE		  "char_size"
 
-/* Name of the trigger attributes */
+#define CT_DUAL_DUMMY                     "dummy"
+
 #define CT_TRIGGER_ATTR_UNIQUE_NAME          "unique_name"
 #define CT_TRIGGER_ATTR_OWNER                "owner"
 #define CT_TRIGGER_ATTR_NAME                 "name"

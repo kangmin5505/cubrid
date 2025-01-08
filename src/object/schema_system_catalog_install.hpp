@@ -24,6 +24,8 @@
 #ifndef _SCHEMA_SYSTEM_CATALOG_INSTALL_HPP_
 #define _SCHEMA_SYSTEM_CATALOG_INSTALL_HPP_
 
+#include "porting.h"
+
 namespace cubschema
 {
   // forward definitions
@@ -82,6 +84,8 @@ namespace cubschema
       static system_catalog_definition get_view_server ();
   };
 }
+
+extern EXPORT_IMPORT int catcls_add_dual (struct db_object *class_mop);
 
 // TODO: move them to proper place
 const char *sm_define_view_class_spec (void);

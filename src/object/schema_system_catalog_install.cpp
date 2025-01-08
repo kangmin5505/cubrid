@@ -193,6 +193,32 @@ catcls_add_charset (struct db_object *class_mop)
   return NO_ERROR;
 }
 
+int
+catcls_add_dual(struct db_object *class_mop)
+    {
+      DB_VALUE val;
+      int error_code = NO_ERROR;
+      DB_OBJECT *obj = db_create_internal (class_mop);
+      const char *dummy = "X";
+      if (obj == NULL)
+	{
+	  assert (er_errid () != NO_ERROR);
+	  return er_errid ();
+	}
+      error_code = db_make_varchar (&val, 1, dummy, strlen (dummy), LANG_SYS_CODESET, LANG_SYS_COLLATION);
+      if (error_code != NO_ERROR)
+	{
+	  return error_code;
+	}
+
+      error_code = db_put_internal (obj, CT_DUAL_DUMMY, &val);
+      if (error_code != NO_ERROR)
+	{
+	  return error_code;
+	}
+      return error_code;
+    }
+
 /* ========================================================================== */
 /* MAIN APIS */
 /* ========================================================================== */
@@ -1077,7 +1103,6 @@ namespace cubschema
   system_catalog_definition
   system_catalog_initializer::get_dual ()
   {
-#define CT_DUAL_DUMMY   "dummy"
     return system_catalog_definition (
 		   // name
 		   CT_DUAL_NAME,
@@ -1096,31 +1121,7 @@ namespace cubschema
       }
     },
 // initializer
-    [] (MOP class_mop)
-    {
-      DB_VALUE val;
-      int error_code = NO_ERROR;
-      DB_OBJECT *obj = db_create_internal (class_mop);
-      const char *dummy = "X";
-      if (obj == NULL)
-	{
-	  assert (er_errid () != NO_ERROR);
-	  return er_errid ();
-	}
-      error_code = db_make_varchar (&val, 1, dummy, strlen (dummy), LANG_SYS_CODESET, LANG_SYS_COLLATION);
-      if (error_code != NO_ERROR)
-	{
-	  return error_code;
-	}
-
-      error_code = db_put_internal (obj, CT_DUAL_DUMMY, &val);
-      if (error_code != NO_ERROR)
-	{
-	  return error_code;
-	}
-      return error_code;
-    }
-	   );
+	   catcls_add_dual);
   }
 
   system_catalog_definition
