@@ -695,7 +695,7 @@ namespace cubschema
   {
     return system_catalog_definition (
 		   // name
-		   CT_QUERYSPEC_NAME,
+		   CT_INDEX_NAME,
 		   // columns
     {
       {"class_of", CT_CLASS_NAME},
@@ -730,7 +730,7 @@ namespace cubschema
   {
     return system_catalog_definition (
 		   // name
-		   CT_QUERYSPEC_NAME,
+		   CT_INDEXKEY_NAME,
 		   // columns
     {
       {"index_of", CT_INDEX_NAME},
