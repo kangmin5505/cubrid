@@ -1827,11 +1827,11 @@ namespace cubschema
       {"pkg_name", format_varchar (255)},
       {"index_of", "integer"},
       {"arg_name", format_varchar (255)},
-      {"data_type", format_varchar(16)},
-      {"mode", format_varchar(6)},
-      {"is_optional", format_varchar(3)},
-      {"default_value", format_varchar(255)},
-      {"comment", format_varchar(1024)},
+      {"data_type", format_varchar (16)},
+      {"mode", format_varchar (6)},
+      {"is_optional", format_varchar (3)},
+      {"default_value", format_varchar (255)},
+      {"comment", format_varchar (1024)},
       // query specs
       {attribute_kind::QUERY_SPEC, sm_define_view_stored_procedure_arguments_spec ()}
     },
