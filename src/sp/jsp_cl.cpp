@@ -874,9 +874,10 @@ jsp_drop_stored_procedure (PARSER_CONTEXT *parser, PT_NODE *statement)
  * Note:
  */
 static int
-jsp_default_value_string (PARSER_CONTEXT *parser, PT_NODE *node, std::string &out)
+jsp_default_value_string (PARSER_CONTEXT *parser, PT_NODE *node, bool &is_null, std::string &out)
 {
   int error = NO_ERROR;
+  is_null = false;
 
   DB_DEFAULT_EXPR default_expr;
   pt_get_default_expression_from_data_default_node (parser, node, &default_expr);
@@ -898,6 +899,7 @@ jsp_default_value_string (PARSER_CONTEXT *parser, PT_NODE *node, std::string &ou
 	  else
 	    {
 	      // empty out consider as NULL
+	      is_null = true;
 	    }
 	}
       else
@@ -932,36 +934,44 @@ jsp_default_value_string (PARSER_CONTEXT *parser, PT_NODE *node, std::string &ou
     }
   else
     {
-      // PT_DATA_TYPE representing _db_stored_procedure_args.default_value
-      PT_NODE *dt = parser_new_node (parser, PT_DATA_TYPE);
-      if (dt == NULL)
-	{
-	  return ER_GENERIC_ERROR;
-	}
-      dt->type_enum = PT_TYPE_VARCHAR;
-      dt->info.data_type.precision = 255;
-      dt->info.data_type.units = (int) LANG_SYS_CODESET;
-      dt->info.data_type.collation_id = LANG_SYS_COLLATION;
-
-      // coerce the value before saving it in _db_stored_procedure_args.default_value
       PT_NODE *default_value = node->info.data_default.default_value;
-      error = pt_coerce_value_explicit (parser, default_value, default_value, PT_TYPE_VARCHAR, dt);
-      if (error != NO_ERROR)
+      DB_VALUE *value = NULL;
+      // do not use initialized db value
+      if (default_value->info.value.db_value_is_initialized)
 	{
-	  pt_reset_error (parser);
-	  PT_ERRORm (parser, default_value, MSGCAT_SET_PARSER_SEMANTIC, MSGCAT_SEMATNIC_SP_PARAM_DEFAULT_STR_TOO_BIG);
-	  er_set (ER_ERROR_SEVERITY, ARG_FILE_LINE, ER_SP_PARAM_DEFAULT_STR_TOO_BIG, 0);
-	  return error;
+	  default_value->info.value.db_value_is_initialized = false;
 	}
 
-      DB_VALUE *value = pt_value_to_db (parser, default_value);
+      value = pt_value_to_db (parser, default_value);
+
       if (!DB_IS_NULL (value))
 	{
-	  out.append (db_get_string (value));
+	  if (TP_IS_CHAR_TYPE (db_value_domain_type (value)))
+	    {
+	      if (db_get_string_size (value) > 255)
+		{
+		  pt_reset_error (parser);
+		  PT_ERRORm (parser, default_value, MSGCAT_SET_PARSER_SEMANTIC, MSGCAT_SEMATNIC_SP_PARAM_DEFAULT_STR_TOO_BIG);
+		  return ER_SP_PARAM_DEFAULT_STR_TOO_BIG;
+		}
+
+	      out.append (db_get_string (value));
+	    }
+	  else
+	    {
+	      DB_VALUE tmp_val;
+	      error = db_value_coerce (value, &tmp_val, db_type_to_db_domain (DB_TYPE_VARCHAR));
+	      if (error == NO_ERROR)
+		{
+		  out.append (db_get_string (&tmp_val));
+		  db_value_clear (&tmp_val);
+		}
+	    }
 	}
       else
 	{
 	  // empty out is considered NULL
+	  is_null = true;
 	}
     }
 
@@ -1059,10 +1069,11 @@ jsp_create_stored_procedure (PARSER_CONTEXT *parser, PT_NODE *statement)
       PT_NODE *default_value = p->info.sp_param.default_value;
       if (default_value)
 	{
+	  bool is_null;
 	  std::string default_value_str;
-	  if (jsp_default_value_string (parser, default_value, default_value_str) == NO_ERROR)
+	  if (jsp_default_value_string (parser, default_value, is_null, default_value_str) == NO_ERROR)
 	    {
-	      if (!default_value_str.empty ())
+	      if (!is_null)
 		{
 		  db_make_string (&arg_info.default_value, ws_copy_string (default_value_str.c_str ()));
 		}
@@ -1075,7 +1086,7 @@ jsp_create_stored_procedure (PARSER_CONTEXT *parser, PT_NODE *statement)
 	    }
 	  else
 	    {
-	      ASSERT_ERROR ();
+	      // MSGCAT_SEMANTIC_PREC_TOO_BIG
 	      goto error_exit;
 	    }
 	}
@@ -2070,6 +2081,7 @@ jsp_make_pl_signature (PARSER_CONTEXT *parser, PT_NODE *node, PT_NODE *subquery_
   int save;
   int error = NO_ERROR;
   char user_name_buffer [DB_MAX_USER_LENGTH + 1];
+  DB_OBJECT *mop_p = NULL;
 
   assert (node);
 
@@ -2087,7 +2099,7 @@ jsp_make_pl_signature (PARSER_CONTEXT *parser, PT_NODE *node, PT_NODE *subquery_
       }
     else
       {
-	DB_OBJECT *mop_p = jsp_find_stored_procedure (name, DB_AUTH_EXECUTE);
+	mop_p = jsp_find_stored_procedure (name, DB_AUTH_EXECUTE);
 	if (mop_p == NULL)
 	  {
 	    error = er_errid ();
@@ -2188,7 +2200,10 @@ jsp_make_pl_signature (PARSER_CONTEXT *parser, PT_NODE *node, PT_NODE *subquery_
   }
 
 exit:
-  AU_ENABLE (save);
+  if (mop_p != NULL)
+    {
+      AU_ENABLE (save);
+    }
   return error;
 }
 
@@ -2414,9 +2429,13 @@ jsp_get_default_expr_node_list (PARSER_CONTEXT *parser, cubpl::pl_signature &sig
   PT_NODE *default_next_node = NULL;
   for (int i = 0; i < sig.arg.arg_size; i++)
     {
-      if (sig.arg.arg_default_value_size[i] == 0)
+      if (sig.arg.arg_default_value_size[i] == PL_ARG_DEFAULT_NULL)
 	{
 	  default_next_node = pt_make_string_value (parser, NULL);
+	}
+      else if (sig.arg.arg_default_value_size[i] == 0)
+	{
+	  default_next_node = pt_make_string_value (parser, "");
 	}
       else if (sig.arg.arg_default_value_size[i] > 0)
 	{
